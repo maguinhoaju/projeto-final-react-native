@@ -9,43 +9,55 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import env from '@/constants/env';
 
-export default function NewLocation() {
+export default function editLocation() {
+    const [id, setId] = useState('');
     const [nome, setNome] = useState('');
     const [cor, setCor] = useState('');
     const [latitude, setLatitude] = useState(0);
     const [longitude, setLongitude] = useState(0);
     const [localizations, setLocalizations] = useState<Localization[]>([]);
     const coresDisponiveis = ['#FF5733', '#33FF57', '#5733FF', '#FFD700', '#FF69B4'];
-    const { latitudeParam, longitudeParam } = useLocalSearchParams();
+    const { idParam, nomeParam, latitudeParam, longitudeParam, corParam } = useLocalSearchParams();
     const [isLoading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+    const [selectedId, setSelectedId] = useState<number>();
 
     useEffect(() => {
-        setNome('');
-        //console.log("Latitude: " + latitudeParam);
-        //console.log("Longitude: " + longitudeParam);
+        setId(idParam.toString());
+        setNome(nomeParam.toString());
         setLatitude(Number(latitudeParam));
         setLongitude(Number(longitudeParam));
-        setCor('');    
+        const corCompleta = "#" + corParam.toString();
+        setCor(corCompleta);
+        console.log("Id: " + idParam.toString() + " Cor: " + corCompleta);
+        const corSelecionada = getSelectedColor(corCompleta);
+        setSelectedId(corSelecionada);
+        console.log("SelectedId: " + selectedId);
     }, []);
 
-    const handleSalvar = () => {
+      // Função retornar o índice da cor no array coresDisponiveis
+    function getSelectedColor(color: string) {
+        const indice = coresDisponiveis.indexOf(color);
+        console.log("getSelectedColor - indice da cor selecionada: " + indice);
+        return indice >= 0 ? indice : 0;
+    }
+    const handleAtualizar = () => {
         if (!nome || !cor) {
             Alert.alert('Erro', 'Todos os campos devem ser preenchidos!');
             return;
         }
         setLoading(true);
-        console.log("Localization Adding");
+        console.log("Localization Editing");
         try {
-            const query = `mutation($newLocalization: addLocalizationInput) {
-              addLocalization(newLocalization: $newLocalization) {
+            const query = `mutation($localization: updateLocalizationInput) {
+              updateLocalization(localization: $localization) {
                 id, nome, latitude, longitude, cor
               }
             }`;
             const variables = {
-                newLocalization: {nome, latitude, longitude, cor},
+                updateLocalization: {id, nome, latitude, longitude, cor},
             };
-            console.log("NewLocation - Localization: " + variables);
+            console.log("UpdateLocalization - Localization: " + variables);
             
             (async () => {
                 const apiGqlUrl = env.API_GQL_URL;
@@ -57,16 +69,16 @@ export default function NewLocation() {
                     body: JSON.stringify({ query, variables }),
                 });
                 const { data } = await response.json();
-                const { addedLocalization } = data;
-                Alert.alert(`Localization salva. Id: ${addedLocalization.id + " - Nome: " + addedLocalization.nome}`);
-                console.log("NewLocation - Localization adicionada: " + addedLocalization);
+                const { updatedLocalization } = data;
+                Alert.alert(`Localization atualizada. Id: ${updatedLocalization.id + " - Nome: " + updatedLocalization.nome}`);
+                console.log("NewLocation - Localization adicionada: " + updatedLocalization);
             })();
         } catch (error) {
-            console.log("deletIconClick - error");
+            console.log("handleSalvar - error");
             console.log(error);
             setMessage(error.message);
         } finally {
-            console.log("deletIconClick - finally");
+            console.log("handleSalvar - finally");
             setLoading(false);
         }
     };
@@ -83,11 +95,11 @@ export default function NewLocation() {
                         <AntDesign name="banckward" size={32} color="white" />
                     </TouchableOpacity>
                 </View>
-                <Text style={styles.title}>Nova localização</Text>
+                <Text style={styles.title}>Editar localização</Text>
             </View>
 
             <View style={styles.container}>
-                <Text style={styles.title}>Cadastrar Item</Text>
+                <Text style={styles.title}>Editar Item</Text>
         
                 <TextInput
                 style={styles.input}
@@ -109,7 +121,6 @@ export default function NewLocation() {
                 value={longitude.toString()}
                 editable={false}
                 />
-        
                 <Text style={styles.label}>Escolha uma cor:</Text>
                 <FlatList
                 data={coresDisponiveis}
@@ -124,11 +135,12 @@ export default function NewLocation() {
                     onPress={() => setCor(item)}
                     />
                 )}
+                extraData={selectedId}
                 />
         
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.button} onPress={handleSalvar}>
-                        <Text style={styles.buttonText}>Salvar</Text>
+                    <TouchableOpacity style={styles.button} onPress={handleAtualizar}>
+                        <Text style={styles.buttonText}>Atualizar</Text>
                     </TouchableOpacity>
                 </View>
             </View>

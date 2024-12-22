@@ -3,51 +3,104 @@ import { Text, FlatList, View, StyleSheet, TouchableOpacity } from 'react-native
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import MapView, { LatLng, MapPressEvent, Marker } from 'react-native-maps';
-import * as Location from 'expo-location'; // reune todos os recursos dessa dependencia em 'Location'
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Localization } from '../../components/types/Localization';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import env from '@/constants/env';
 
-export default function MyLocationsList({ handleItemClicked } : any) {
+export default function MyLocationsList({ handleItemClicked }: any) {
 
     const [localizations, setLocalizations] = useState<Array<Localization>>([]);
-    
+    const [isLoading, setLoading] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+
+    // evento do click no ItemList - redireciona para o mapa
     const itemClick = (item: any) => {
-        router.push(`/?latitude=${item.posicao.latitude}&longitude=${item.posicao.longitude}`);
+        router.push(`/?latitude=${item.latitude}&longitude=${item.longitude}`);
     }
 
-    //Não consegui fazer funcionar o delete
-    const deletIconClick = (item: any) => {
-        (async () => {
-            console.log(item);
-            const localizationsStorage = await AsyncStorage.getItem('localizations');
-            let localizationList: Array<Localization> = [];
-            if (localizationsStorage) {
-              localizationList = JSON.parse(localizationsStorage);
-              const indexToRemove = localizationList.findIndex(itemArr => itemArr.id === item.id);
-              console.log(indexToRemove)
-              localizationList.splice(indexToRemove, 1)
-              console.log(localizationList)
-              setLocalizations(localizationList);
-            }
-        })(); 
+    // evento do botão editar na ItemList
+    const editIconClick = (item: any) => {
+        const corSemHash = item.cor.replace('#', '');
+        console.log("Item.Nome: " + item.nome + " - Item.Cor: " + corSemHash);
+        router.push(`/EditLocation?idParam=${item.id}&nomeParam=${item.nome}&latitudeParam=${item.latitude}&longitudeParam=${item.longitude}&corParam=${corSemHash}`);
+    }
+
+    const getLocalizationsApi = async () => {
+        //    console.log("getLocalizationsApi - begin");
+        setLoading(true);
+        try {
+            const apiGqlUrl = env.API_GQL_URL;
+            const response = await fetch(apiGqlUrl, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: `query {
+                        localizations {
+                          id
+                          nome
+                          latitude
+                          longitude
+                          cor
+                        }
+                      }`,
+                })
+            }); // POST
+            const { data } = await response.json();
+            console.log(data.localizations);
+            setLocalizations(data.localizations);
+        } catch (error) {
+            console.log("getLocalizationsApi - error");
+            console.log(error);
+            setMessage(error.message);
+        } finally {
+            //      console.log("getLocalizationsApi - finally");
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
-        (async () => {
-          const localizationsStorage = await AsyncStorage.getItem('localizations');
-          let localizationList: Array<Localization> = [];
-          if (localizationsStorage) {
-            localizationList = JSON.parse(localizationsStorage);
-            setLocalizations(localizationList);
-          }
-        })(); 
-      }, []);
-    
+        // console.log("MyLocationsList - UseEffect 1");
+        getLocalizationsApi();
+    }, []);
+
+    const deletIconClick = (item: any) => {
+        setLoading(true);
+        console.log("Localization to be deleted: " + item.id);
+        try {
+            const query = `mutation Mutation($deleteLocalizationId: String!) {
+                        deleteLocalization(id: $deleteLocalizationId)
+            }`;
+            const variables = {
+                "deleteLocalizationId": item.id,
+            };
+            (async () => {
+                const apiGqlUrl = env.API_GQL_URL;
+                const response = await fetch(apiGqlUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ query, variables }),
+                });
+                const { data } = await response.json();
+                getLocalizationsApi();
+            })();
+        } catch (error) {
+            console.log("deletIconClick - error");
+            console.log(error);
+            setMessage(error.message);
+        } finally {
+            // console.log("deletIconClick - finally");
+            setLoading(false);
+        }
+    }
+
     const handleReturn = () => {
-      router.push('/');
+        router.push('/');
     };
-    
+
     return (
         <View>
             <View style={styles.navbar}>
@@ -61,7 +114,12 @@ export default function MyLocationsList({ handleItemClicked } : any) {
             <View style={styles.container}>
                 <FlatList style={styles.locationsList}
                     data={localizations}
-                    renderItem={({ item }) => <ItemList item={item} handleItemClick={itemClick} handleIconPress={deletIconClick} />}
+                    renderItem={({ item }) => <ItemList 
+                        item={item} 
+                        handleItemClick={itemClick} 
+                        handleDeleteIconPress={deletIconClick} 
+                        handleEditIconPress={editIconClick} 
+                    />}
                     keyExtractor={item => String(item.id)}
                 />
             </View>
@@ -76,7 +134,7 @@ const styles = StyleSheet.create({
     header: {
         fontSize: 30,
     },
-    locationsList:{
+    locationsList: {
         margin: 15
     },
     locationMapView: {
@@ -96,10 +154,10 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
     },
-      iconsContainer: {
+    iconsContainer: {
         flexDirection: 'row',
-      },
-      icon: {
+    },
+    icon: {
         marginRight: 15,
     },
 });
