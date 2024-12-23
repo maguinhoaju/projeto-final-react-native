@@ -2,7 +2,6 @@ import ItemList from '@/components/ItemList';
 import { Text, FlatList, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import MapView, { LatLng, MapPressEvent, Marker } from 'react-native-maps';
 import { Localization } from '../../components/types/Localization';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import env from '@/constants/env';

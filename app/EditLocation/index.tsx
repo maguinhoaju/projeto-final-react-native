@@ -1,10 +1,7 @@
 import { Alert, Button, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Localization } from '../../components/types/Localization';
-import { v4 as uuid } from 'uuid';
 import 'react-native-get-random-values';
 import { useEffect, useState } from 'react';
-import { LatLng } from 'react-native-maps';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import env from '@/constants/env';
@@ -15,7 +12,6 @@ export default function editLocation() {
     const [cor, setCor] = useState('');
     const [latitude, setLatitude] = useState(0);
     const [longitude, setLongitude] = useState(0);
-    const [localizations, setLocalizations] = useState<Localization[]>([]);
     const coresDisponiveis = ['#FF5733', '#33FF57', '#5733FF', '#FFD700', '#FF69B4'];
     const { idParam, nomeParam, latitudeParam, longitudeParam, corParam } = useLocalSearchParams();
     const [isLoading, setLoading] = useState(false);
@@ -99,7 +95,7 @@ export default function editLocation() {
             </View>
 
             <View style={styles.container}>
-                <Text style={styles.title}>Editar Item</Text>
+                <Text style={styles.subTitle}>Editar Item</Text>
         
                 <TextInput
                 style={styles.input}
@@ -157,6 +153,11 @@ export default function editLocation() {
         fontSize: 24,
         fontWeight: 'bold',
     },
+    subTitle: {
+      color: 'black',
+      fontSize: 24,
+      fontWeight: 'bold',
+    },    
     input: {
       borderWidth: 1,
       borderColor: '#ccc',

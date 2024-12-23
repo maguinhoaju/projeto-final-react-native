@@ -1,10 +1,8 @@
-import { Alert, Button, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Alert, Button, FlatList, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
 import { Localization } from '../../components/types/Localization';
-import { v4 as uuid } from 'uuid';
 import 'react-native-get-random-values';
 import { useEffect, useState } from 'react';
-import { LatLng } from 'react-native-maps';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import env from '@/constants/env';
@@ -83,11 +81,11 @@ export default function NewLocation() {
                         <AntDesign name="banckward" size={32} color="white" />
                     </TouchableOpacity>
                 </View>
-                <Text style={styles.title}>Nova localização</Text>
+                <Text variant="headlineLarge" style={styles.title}>Nova localização</Text>
             </View>
 
             <View style={styles.container}>
-                <Text style={styles.title}>Cadastrar Item</Text>
+                <Text variant="displayMedium" style={styles.subTitle}>Cadastrar Item</Text>
         
                 <TextInput
                 style={styles.input}
@@ -145,6 +143,11 @@ export default function NewLocation() {
         fontSize: 24,
         fontWeight: 'bold',
     },
+    subTitle: {
+        color: 'black',
+        fontSize: 24,
+        fontWeight: 'bold',
+    },    
     input: {
       borderWidth: 1,
       borderColor: '#ccc',
@@ -163,12 +166,6 @@ export default function NewLocation() {
       marginHorizontal: 5,
       borderRadius: 20,
       borderColor: '#ccc',
-    },
-    subTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginTop: 20,
-      marginBottom: 10,
     },
     item: {
       padding: 15,

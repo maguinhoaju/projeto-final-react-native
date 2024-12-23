@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Text } from 'react-native-paper';
 import MapView, { MapPressEvent, Marker } from 'react-native-maps';
 import * as Location from 'expo-location'; // reune todos os recursos dessa dependencia em 'Location'
 import { Ionicons } from '@expo/vector-icons';
@@ -114,7 +115,7 @@ useEffect(() => {
   return (
     <View>
       <View style={styles.navbar}>
-        <Text style={styles.title}>My Locations App</Text>
+        <Text variant="headlineLarge" style={styles.title}>My Locations App</Text>
         <View style={styles.iconsContainer}>
           <TouchableOpacity onPress={handleAddPress} style={styles.icon}>
             <Ionicons name="add-circle" size={32} color="white" />
