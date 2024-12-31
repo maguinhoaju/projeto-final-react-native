@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, useWindowDimensions, Button } from 'react-native';
 import { Text } from 'react-native-paper';
 import MapView, { MapPressEvent, Marker } from 'react-native-maps';
 import * as Location from 'expo-location'; // reune todos os recursos dessa dependencia em 'Location'
@@ -25,25 +25,24 @@ export default function HomeScreen() {
     longitudeDelta: 0.2,
   });
 
-  const { onLogout } = useAuth();
+  const { authState, onLogout } = useAuth();
 
-	const onLogoutPressed = () => {
-		onLogout!();
-    router.push('/');
-	};
+  const onLogoutPressed = () => {
+    onLogout!();
+  };
 
   const getLocalizationsApi = async () => {
-//    console.log("getLocalizationsApi - begin");
+    //    console.log("getLocalizationsApi - begin");
     setLoading(true);
     try {
-        const apiGqlUrl = env.API_GQL_URL;
-        const response = await fetch(apiGqlUrl, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                query: `query {
+      const apiGqlUrl = env.API_GQL_URL;
+      const response = await fetch(apiGqlUrl, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: `query {
                     localizations {
                       id
                       nome
@@ -52,52 +51,60 @@ export default function HomeScreen() {
                       cor
                     }
                   }`,
-            })
-        }); // POST
-        const { data } = await response.json();
-        //console.log(data.localizations);
-        setLocalizations(data.localizations);
+        })
+      }); // POST
+      const { data } = await response.json();
+      //console.log(data.localizations);
+      setLocalizations(data.localizations);
     } catch (error) {
       console.log("getLocalizationsApi - error");
       console.log(error);
       setMessage(error.message);
     } finally {
-//      console.log("getLocalizationsApi - finally");
+      //      console.log("getLocalizationsApi - finally");
       setLoading(false);
     }
-}
-
-useEffect(() => {
-//  console.log("UseEffect 1");
-  getLocalizationsApi();
-}, []);
+  }
 
   //Obtém permissão de obter a localização do dispositivo
+  //  useEffect(() => {
+  //    (async () => {
+  //      let locationPermission = await Location.requestForegroundPermissionsAsync();
+  //      if (locationPermission.status !== 'granted') {
+  //        let message = 'A permissão foi negada.'
+  //        setMessage(message);
+  //      }
+  //    })();
+  //  }, []);
+
+//  useEffect(() => {
+//    if (!authState?.authenticated) {
+//      //console.log('If 1');
+//      router.push('/');
+//    }
+//  }, [authState]);
+
   useEffect(() => {
     (async () => {
       let locationPermission = await Location.requestForegroundPermissionsAsync();
       if (locationPermission.status !== 'granted') {
         let message = 'A permissão foi negada.'
         setMessage(message);
+      } else {
+        let location = await Location.getLastKnownPositionAsync();
+        setLocation(location);
+        const stringLatitude = Array.isArray(latitude) ? latitude[0] : latitude;
+        const stringLongitude = Array.isArray(longitude) ? longitude[0] : longitude;
+        const validatedLatitude = isValidCoordinate(stringLatitude) ? parseFloat(stringLatitude) : location?.coords?.latitude ?? 0;
+        const validatedLongitude = isValidCoordinate(stringLongitude) ? parseFloat(stringLongitude) : location?.coords?.longitude ?? 0;
+        setRegion({
+          latitude: validatedLatitude,
+          longitude: validatedLongitude,
+          latitudeDelta: 0.2,
+          longitudeDelta: 0.2,
+        });
+        getLocalizationsApi();
       }
-    })();
-  }, []);
-
-  // useEffect para atualizar a região com base em latitude e longitude
-  useEffect(() => {
-    (async () => {
-      let location = await Location.getLastKnownPositionAsync();
-      setLocation(location);
-      const stringLatitude = Array.isArray(latitude) ? latitude[0] : latitude;
-      const stringLongitude = Array.isArray(longitude) ? longitude[0] : longitude;
-      const validatedLatitude = isValidCoordinate(stringLatitude) ? parseFloat(stringLatitude) : location?.coords?.latitude ?? 0;
-      const validatedLongitude = isValidCoordinate(stringLongitude) ? parseFloat(stringLongitude) : location?.coords?.longitude ?? 0;
-      setRegion({ 
-        latitude: validatedLatitude,
-        longitude: validatedLongitude,
-        latitudeDelta: 0.2,
-        longitudeDelta: 0.2,
-      });
     })();
   }, [latitude, longitude]);
 
@@ -110,15 +117,14 @@ useEffect(() => {
   const handleAddPress = async () => {
     //console.log('Adicionar');
     let location = await Location.getCurrentPositionAsync();
-    router.push(`/NewLocation?latitudeParam=${location.coords.latitude}&longitudeParam=${location.coords.longitude}`);
+    router.push(`/(protected)/NewLocation?latitudeParam=${location.coords.latitude}&longitudeParam=${location.coords.longitude}`);
   };
 
   //Evento do click do botão Listar
   const handleListPress = () => {
     //console.log('Listar');
-    router.push('/MyLocationsList');
+    router.push('/(protected)/MyLocationsList');
   };
-
 
   return (
     <View>
@@ -145,7 +151,7 @@ useEffect(() => {
         showsPointsOfInterest
         onPress={async (mapPress: MapPressEvent) => {
           const { coordinate } = mapPress.nativeEvent;
-          router.push(`/NewLocation?latitudeParam=${coordinate.latitude}&longitudeParam=${coordinate.longitude}`);
+          router.push(`/(protected)/NewLocation?latitudeParam=${coordinate.latitude}&longitudeParam=${coordinate.longitude}`);
         }}
       >
         {localizations.map(localization => (<Marker

@@ -14,14 +14,14 @@ export default function MyLocationsList({ handleItemClicked }: any) {
 
     // evento do click no ItemList - redireciona para o mapa
     const itemClick = (item: any) => {
-        router.push(`/(auth)?latitude=${item.latitude}&longitude=${item.longitude}`);
+        router.push(`/(protected)?latitude=${item.latitude}&longitude=${item.longitude}`);
     }
 
     // evento do botão editar na ItemList
     const editIconClick = (item: any) => {
         const corSemHash = item.cor.replace('#', '');
         console.log("Item.Nome: " + item.nome + " - Item.Cor: " + corSemHash);
-        router.push(`/(auth)/EditLocation?idParam=${item.id}&nomeParam=${item.nome}&latitudeParam=${item.latitude}&longitudeParam=${item.longitude}&corParam=${corSemHash}`);
+        router.push(`/(protected)/EditLocation?idParam=${item.id}&nomeParam=${item.nome}&latitudeParam=${item.latitude}&longitudeParam=${item.longitude}&corParam=${corSemHash}`);
     }
 
     const getLocalizationsApi = async () => {

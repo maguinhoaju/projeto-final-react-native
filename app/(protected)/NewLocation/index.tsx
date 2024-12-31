@@ -64,7 +64,7 @@ export default function NewLocation() {
         } finally {
             //console.log("handleSalvar - finally");
             setLoading(false);
-            router.push(`/(auth)?latitude=${latitude}&longitude=${longitude}`);
+            router.push(`/(protected)?latitude=${latitude}&longitude=${longitude}`);
         }
     };
 
