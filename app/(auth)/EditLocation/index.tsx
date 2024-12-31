@@ -1,5 +1,5 @@
 import { Alert, Button, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Localization } from '../../components/types/Localization';
+import { Localization } from '../../../components/types/Localization';
 import 'react-native-get-random-values';
 import { useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -25,16 +25,16 @@ export default function editLocation() {
         setLongitude(Number(longitudeParam));
         const corCompleta = "#" + corParam.toString();
         setCor(corCompleta);
-        console.log("Id: " + idParam.toString() + " Cor: " + corCompleta);
+        //console.log("Id: " + idParam.toString() + " Cor: " + corCompleta);
         const corSelecionada = getSelectedColor(corCompleta);
         setSelectedId(corSelecionada);
-        console.log("SelectedId: " + selectedId);
+        //console.log("SelectedId: " + selectedId);
     }, []);
 
       // Função retornar o índice da cor no array coresDisponiveis
     function getSelectedColor(color: string) {
         const indice = coresDisponiveis.indexOf(color);
-        console.log("getSelectedColor - indice da cor selecionada: " + indice);
+        //console.log("getSelectedColor - indice da cor selecionada: " + indice);
         return indice >= 0 ? indice : 0;
     }
     const handleAtualizar = () => {
@@ -53,7 +53,7 @@ export default function editLocation() {
             const variables = {
                 updateLocalization: {id, nome, latitude, longitude, cor},
             };
-            console.log("UpdateLocalization - Localization: " + variables);
+            //console.log("UpdateLocalization - Localization: " + variables);
             
             (async () => {
                 const apiGqlUrl = env.API_GQL_URL;
@@ -67,15 +67,16 @@ export default function editLocation() {
                 const { data } = await response.json();
                 const { updatedLocalization } = data;
                 Alert.alert(`Localization atualizada. Id: ${updatedLocalization.id + " - Nome: " + updatedLocalization.nome}`);
-                console.log("NewLocation - Localization adicionada: " + updatedLocalization);
+                //console.log("UpdateLocalization - Localization adicionada: " + updatedLocalization);
             })();
         } catch (error) {
-            console.log("handleSalvar - error");
+            //console.log("handleSalvar - error");
             console.log(error);
             setMessage(error.message);
         } finally {
-            console.log("handleSalvar - finally");
+            //console.log("handleSalvar - finally");
             setLoading(false);
+            router.push(`/(auth)?latitude=${latitude}&longitude=${longitude}`);
         }
     };
 

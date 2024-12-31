@@ -2,7 +2,7 @@ import ItemList from '@/components/ItemList';
 import { Text, FlatList, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Localization } from '../../components/types/Localization';
+import { Localization } from '../../../components/types/Localization';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import env from '@/constants/env';
 
@@ -14,14 +14,14 @@ export default function MyLocationsList({ handleItemClicked }: any) {
 
     // evento do click no ItemList - redireciona para o mapa
     const itemClick = (item: any) => {
-        router.push(`/?latitude=${item.latitude}&longitude=${item.longitude}`);
+        router.push(`/(auth)?latitude=${item.latitude}&longitude=${item.longitude}`);
     }
 
     // evento do botão editar na ItemList
     const editIconClick = (item: any) => {
         const corSemHash = item.cor.replace('#', '');
         console.log("Item.Nome: " + item.nome + " - Item.Cor: " + corSemHash);
-        router.push(`/EditLocation?idParam=${item.id}&nomeParam=${item.nome}&latitudeParam=${item.latitude}&longitudeParam=${item.longitude}&corParam=${corSemHash}`);
+        router.push(`/(auth)/EditLocation?idParam=${item.id}&nomeParam=${item.nome}&latitudeParam=${item.latitude}&longitudeParam=${item.longitude}&corParam=${corSemHash}`);
     }
 
     const getLocalizationsApi = async () => {

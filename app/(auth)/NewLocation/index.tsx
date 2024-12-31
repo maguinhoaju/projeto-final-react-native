@@ -1,6 +1,6 @@
 import { Alert, Button, FlatList, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Localization } from '../../components/types/Localization';
+import { Localization } from '../../../components/types/Localization';
 import 'react-native-get-random-values';
 import { useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -20,8 +20,6 @@ export default function NewLocation() {
 
     useEffect(() => {
         setNome('');
-        //console.log("Latitude: " + latitudeParam);
-        //console.log("Longitude: " + longitudeParam);
         setLatitude(Number(latitudeParam));
         setLongitude(Number(longitudeParam));
         setCor('');    
@@ -33,7 +31,7 @@ export default function NewLocation() {
             return;
         }
         setLoading(true);
-        console.log("Localization Adding");
+        //console.log("Localization Adding");
         try {
             const query = `mutation($newLocalization: addLocalizationInput) {
               addLocalization(newLocalization: $newLocalization) {
@@ -43,7 +41,7 @@ export default function NewLocation() {
             const variables = {
                 newLocalization: {nome, latitude, longitude, cor},
             };
-            console.log("NewLocation - Localization: " + variables);
+            //console.log("NewLocation - Localization: " + variables);
             
             (async () => {
                 const apiGqlUrl = env.API_GQL_URL;
@@ -57,15 +55,16 @@ export default function NewLocation() {
                 const { data } = await response.json();
                 const { addedLocalization } = data;
                 Alert.alert(`Localization salva. Id: ${addedLocalization.id + " - Nome: " + addedLocalization.nome}`);
-                console.log("NewLocation - Localization adicionada: " + addedLocalization);
+                //console.log("NewLocation - Localization adicionada: " + addedLocalization);
             })();
         } catch (error) {
-            console.log("deletIconClick - error");
+            //console.log("handleSalvar - error");
             console.log(error);
             setMessage(error.message);
         } finally {
-            console.log("deletIconClick - finally");
+            //console.log("handleSalvar - finally");
             setLoading(false);
+            router.push(`/(auth)?latitude=${latitude}&longitude=${longitude}`);
         }
     };
 
@@ -196,21 +195,21 @@ export default function NewLocation() {
         alignItems: 'center',
       },
       button: {
-        backgroundColor: '#6200ee',  // Cor do botão
-        paddingVertical: 5,          // Espaçamento interno (vertical)
-        paddingHorizontal: 50,        // Espaçamento interno (horizontal)
-        borderRadius: 25,             // Bordas arredondadas
-        alignItems: 'center',         // Alinhar o texto ao centro
-        justifyContent: 'center',     // Alinhar o conteúdo ao centro
-        elevation: 3,                 // Sombra para Android
-        shadowRadius: 3.5,            // Raio da sombra para iOS
+        backgroundColor: '#6200ee',  
+        paddingVertical: 5,          
+        paddingHorizontal: 50,       
+        borderRadius: 25,            
+        alignItems: 'center',        
+        justifyContent: 'center',    
+        elevation: 3,                
+        shadowRadius: 3.5,           
         marginTop: 200,
         height: 60
       },
       buttonText: {
-        color: 'white',                // Cor do texto (branco)
-        fontSize: 26,                 // Tamanho da fonte
-        fontWeight: 'bold',           // Peso da fonte (negrito)
+        color: 'white',              
+        fontSize: 26,                
+        fontWeight: 'bold',          
       }, 
 });
 

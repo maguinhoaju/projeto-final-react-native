@@ -1,181 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { Text } from 'react-native-paper';
-import MapView, { MapPressEvent, Marker } from 'react-native-maps';
-import * as Location from 'expo-location'; // reune todos os recursos dessa dependencia em 'Location'
-import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import env from '@/constants/env';
+import React, { useState } from 'react';
+import { Text, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
-import { Localization } from '../components/types/Localization';
+const Page = () => {
+	const [username, setUsername] = useState('user');
+	const [password, setPassword] = useState('user');
+	const { onLogin } = useAuth();
 
-export default function HomeScreen() {
+	const onSignInPress = async () => {
+		onLogin!(username, password);
+	};
 
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const { width, height } = useWindowDimensions();
-  const isPortrait = width < height; //TODO - final da aula de 11/11 fala disso
-  const [isLoading, setLoading] = useState(false);
-  const [localizations, setLocalizations] = useState<Array<Localization>>([]);
-  const { latitude, longitude } = useLocalSearchParams();
-  const [region, setRegion] = useState({
-    latitude: 0,
-    longitude: 0,
-    latitudeDelta: 0.2,
-    longitudeDelta: 0.2,
-  });
-  const getLocalizationsApi = async () => {
-//    console.log("getLocalizationsApi - begin");
-    setLoading(true);
-    try {
-        const apiGqlUrl = env.API_GQL_URL;
-        const response = await fetch(apiGqlUrl, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                query: `query {
-                    localizations {
-                      id
-                      nome
-                      latitude
-                      longitude
-                      cor
-                    }
-                  }`,
-            })
-        }); // POST
-        const { data } = await response.json();
-        console.log(data.localizations);
-        setLocalizations(data.localizations);
-    } catch (error) {
-      console.log("getLocalizationsApi - error");
-      console.log(error);
-      setMessage(error.message);
-    } finally {
-//      console.log("getLocalizationsApi - finally");
-      setLoading(false);
-    }
-}
+	return (
+		<KeyboardAvoidingView
+			behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+			style={styles.container}
+		>
+			<Text style={styles.header}>My Localizations App</Text>
+			<TextInput
+				autoCapitalize="none"
+				placeholder="username"
+				value={username}
+				onChangeText={setUsername}
+				style={styles.inputField}
+			/>
+			<TextInput
+				placeholder="password"
+				value={password}
+				onChangeText={setPassword}
+				secureTextEntry
+				style={styles.inputField}
+			/>
 
-useEffect(() => {
-//  console.log("UseEffect 1");
-  getLocalizationsApi();
-}, []);
-
-  //Obtém permissão de obter a localização do dispositivo
-  useEffect(() => {
-    (async () => {
-      let locationPermission = await Location.requestForegroundPermissionsAsync();
-      if (locationPermission.status !== 'granted') {
-        let message = 'A permissão foi negada.'
-        setMessage(message);
-      }
-    })();
-  }, []);
-
-  // useEffect para atualizar a região com base em latitude e longitude
-  useEffect(() => {
-    (async () => {
-      let location = await Location.getLastKnownPositionAsync();
-      setLocation(location);
-      const stringLatitude = Array.isArray(latitude) ? latitude[0] : latitude;
-      const stringLongitude = Array.isArray(longitude) ? longitude[0] : longitude;
-      const validatedLatitude = isValidCoordinate(stringLatitude) ? parseFloat(stringLatitude) : location?.coords?.latitude ?? 0;
-      const validatedLongitude = isValidCoordinate(stringLongitude) ? parseFloat(stringLongitude) : location?.coords?.longitude ?? 0;
-      setRegion({ 
-        latitude: validatedLatitude,
-        longitude: validatedLongitude,
-        latitudeDelta: 0.2,
-        longitudeDelta: 0.2,
-      });
-    })();
-  }, [latitude, longitude]);
-
-  // Função para validar se a coordenada é válida
-  function isValidCoordinate(stringValue: any) {
-    return stringValue !== null && stringValue !== undefined && stringValue.trim() !== '' && !isNaN(parseFloat(stringValue));
-  }
-
-  //Evento do click do botão Adicionar
-  const handleAddPress = async () => {
-    console.log('Adicionar');
-    let location = await Location.getCurrentPositionAsync();
-    router.push(`/NewLocation?latitudeParam=${location.coords.latitude}&longitudeParam=${location.coords.longitude}`);
-  };
-
-  //Evento do click do botão Listar
-  const handleListPress = () => {
-    console.log('Listar');
-    router.push('/MyLocationsList');
-  };
-
-
-  return (
-    <View>
-      <View style={styles.navbar}>
-        <Text variant="headlineLarge" style={styles.title}>My Locations App</Text>
-        <View style={styles.iconsContainer}>
-          <TouchableOpacity onPress={handleAddPress} style={styles.icon}>
-            <Ionicons name="add-circle" size={32} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleListPress} style={styles.icon}>
-            <Ionicons name="list-circle" size={32} color="white" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <MapView
-        style={styles.locationMapView}
-        region={region}
-        onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
-        showsUserLocation
-        showsPointsOfInterest
-        onPress={async (mapPress: MapPressEvent) => {
-          const { coordinate } = mapPress.nativeEvent;
-          router.push(`/NewLocation?latitudeParam=${coordinate.latitude}&longitudeParam=${coordinate.longitude}`);
-        }}
-      >
-        {localizations.map(localization => (<Marker
-          key={localization.id}
-          id={localization.id}
-          title={localization.nome}
-          pinColor={localization.cor}
-          coordinate={{
-            latitude: localization.latitude,
-            longitude: localization.longitude
-          }}
-        />
-        ))}
-      </MapView>
-    </View>
-  );
-}
+			<TouchableOpacity onPress={onSignInPress} style={styles.button}>
+				<Text style={styles.buttonText}>Login</Text>
+			</TouchableOpacity>
+		</KeyboardAvoidingView>
+	);
+};
 
 const styles = StyleSheet.create({
-  locationMapView: {
-    width: "100%",
-    height: "100%",
+	container: {
+		flex: 1,
+		padding: 20,
+		paddingHorizontal: '20%',
+		justifyContent: 'center'
+	},
+	header: {
+		fontSize: 32,
+    color: '#6200ee',
+		textAlign: 'center',
+		marginBottom: 60,
+    fontWeight: 'bold'
+	},
+	inputField: {
+		marginVertical: 4,
+		height: 50,
+		borderWidth: 1,
+		borderColor: '#ccc',
+		borderRadius: 4,
+		padding: 10
+	},
+  button: {
+    backgroundColor: '#6200ee',  // Cor do botão
+    paddingVertical: 5,          // Espaçamento interno (vertical)
+    paddingHorizontal: 50,        // Espaçamento interno (horizontal)
+    borderRadius: 4,             // Bordas arredondadas
+    alignItems: 'center',         // Alinhar o texto ao centro
+    justifyContent: 'center',     // Alinhar o conteúdo ao centro
+    elevation: 3,                 // Sombra para Android
+    shadowRadius: 3.5,            // Raio da sombra para iOS
+    marginTop: 15,
+    height: 60
   },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#6200ee',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    elevation: 4,
-  },
-  title: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  iconsContainer: {
-    flexDirection: 'row',
-  },
-  icon: {
-    marginLeft: 15,
-  },
+  buttonText: {
+    color: 'white',                // Cor do texto (branco)
+    fontSize: 20,                 // Tamanho da fonte
+    fontWeight: 'bold',           // Peso da fonte (negrito)
+  }, 
 });
+export default Page;
